@@ -55,7 +55,7 @@ library(rpart.plot)
 rpart.plot(model_tree)
 
 
-#Full CART
+#Full CART, didn't know how to make it full so I looked at the code 
 full_tree<-rpart(Species~.,data=train_data,method="class", control=rpart.control(cp=0,minsplit=1))
 
 #predict species on the training/validation set
@@ -69,7 +69,85 @@ train_error_rate_full <- sum(train_predictions_full != train_data$Species) / dim
 print(paste("Training Error Rate:", train_error_rate_full))
 
 
-# Plot the tree
+#Plot the tree
 rpart.plot(full_tree)
 
 #This rpart.plot package seems cool. much easier to read!
+
+
+
+#K folding 
+
+#found caret online for k folding, going to try and use it here
+
+
+library(caret)
+
+#k to use
+numberK <- 7
+
+#shuffle the rows of the dataset
+shuffled_data <- dataset[sample(dim(dataset)[1], dim(dataset)[1], replace = FALSE),]
+
+
+#set up cross-validation control using the 'trainControl' function from the caret package
+cv_control <- trainControl(method = "cv", number = numberK)
+head(cv_control)
+
+#caret's train() function is used for k-fold cross-validation
+names(getModelInfo())
+#I don't know which model to use, going to use rpart or lm because I saw an example online
+kfold_tree_model <- train(Species ~ ., 
+                          data = shuffled_data, 
+                          method = "rpart", 
+                          trControl = cv_control)
+
+#results of cross val
+print(kfold_tree_model)
+
+kfold_tree_model$pred
+
+#final small tree
+rpart.plot(kfold_tree_model$finalModel)
+
+#out-of-sample error rate for model_tree
+model_tree_error_rate <- 1 - max(kfold_tree_model$results$Accuracy)
+print(paste("Out-of-sample error rate for small tree:", model_tree_error_rate))
+
+
+
+#full_tree cv, added the cp parameters from before 
+cv_full_tree <- train(Species ~ ., 
+                      data = dataset, 
+                      method = "rpart", 
+                      trControl = cv_control, 
+                      tuneGrid = data.frame(cp = 0))
+
+#cross-validation results for full_tree
+print(cv_full_tree)
+
+#out-of-sample error rate for full_tree
+full_tree_error_rate <- 1 - max(cv_full_tree$results$Accuracy)
+print(paste("Out-of-sample error rate for full_tree:", full_tree_error_rate))
+
+
+#within sample error agaim
+train_predictions_model <- predict(model_tree, type = "class")
+table(train_predictions_model, train_data$Species)
+#within-sample error rate
+within_sample_error_model_tree <- sum(train_predictions_model != train_data$Species) / nrow(train_data)
+print(paste("Within-sample error rate for pruned tree:", within_sample_error_model_tree))
+
+#fulltree within error rate
+train_predictions_full <- predict(full_tree, type = "class")
+table(train_predictions_full, train_data$Species)
+#within-sample error rate
+within_sample_error_full_tree <- sum(train_predictions_full != train_data$Species) / nrow(train_data)
+print(paste("Within-sample error rate for full tree:", within_sample_error_full_tree))
+
+
+#looks like the out of sample error rate is much higher in the pruned tree, which makes sense because the error rate should be higher with data that wasn't used to train the model
+#The out of sample error for the full tree is still higher than within, but still much lower than the pruned tree
+#for both within and out of sample error rates, the full tree performed much better 
+#according to the plot and the error rates, it looks like my unpruned full tree just did better. Perhaps the data was so complex it would be hard to overfit, and the absence of pruning really helped the model get to a point where it could predict species accurately on both within and outside data
+#This is different than in class, where the complex model was overfit to the cancer data, so I'm curious as to why this happened here 
