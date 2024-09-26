@@ -211,3 +211,66 @@ print(paste("Out-of-sample error rate for pruned_tree:", pruned_tree_error_rate)
 
 #As expected, out of sample error rate is marginally higher for any cp above 0 
 
+
+
+#Day 5 
+#Bagging w my full trees
+# Load necessary library
+library(ipred)
+set.seed(101)
+
+#ipredbagg doesn't like characters 
+train_data$Species <- as.factor(train_data$Species)
+
+bagging_model <- bagging(Species ~ ., data = train_data, nbagg = 500,
+                         control = rpart.control(cp = 0, minsplit = 1))
+
+#predict on training data
+bagging_predictions <- predict(bagging_model, train_data)
+
+#confusion matrix and error rate for bagging model on training data
+table(bagging_predictions, train_data$Species)
+bagging_error_rate <- sum(bagging_predictions != train_data$Species) / nrow(train_data)
+print(paste("Training Error Rate (Bagging):", bagging_error_rate))
+#still 0 for error rate
+
+#cross-validation for bagging model
+set.seed(101)
+cv_bagging_model <- train(Species ~ ., 
+                          data = dataset, 
+                          method = "treebag", 
+                          trControl = cv_control)
+
+#cross-validation results for bagging model
+print(cv_bagging_model)
+
+#out-of-sample error rate for bagging model
+bagging_cv_error_rate <- 1 - max(cv_bagging_model$results$Accuracy)
+print(paste("Out-of-sample error rate for Bagging:", bagging_cv_error_rate))
+print(paste("Out-of-sample error rate for full_tree:", full_tree_error_rate))
+#The bagging model does have a slightly lower out of sample error rate compared to the full_tree
+
+#Random forest
+library(randomForest)
+
+# Set up the random forest model with 1000 trees
+set.seed(101)
+rf_model <- randomForest(Species ~ ., data = train_data, ntree = 1000)
+
+# Predict on training data
+rf_predictions <- predict(rf_model, train_data)
+
+#matrix and error rate for random forest model on training data
+table(rf_predictions, train_data$Species)
+rf_error_rate <- sum(rf_predictions != train_data$Species) / nrow(train_data)
+print(paste("Training Error Rate (Random Forest):", rf_error_rate))
+cv_rf_model <- train(Species ~ ., 
+                     data = dataset, 
+                     method = "rf", 
+                     trControl = cv_control)
+print(cv_rf_model)
+
+rf_cv_error_rate <- 1 - max(cv_rf_model$results$Accuracy)
+print(paste("Out-of-sample error rate for Random Forest:", rf_cv_error_rate))
+
+#Random forest has had the best out of sample error rate! cool stuff 
