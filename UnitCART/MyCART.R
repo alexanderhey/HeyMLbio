@@ -268,9 +268,157 @@ cv_rf_model <- train(Species ~ .,
                      data = dataset, 
                      method = "rf", 
                      trControl = cv_control)
-print(cv_rf_model)
+print(cv_rf_model$results)
 
 rf_cv_error_rate <- 1 - max(cv_rf_model$results$Accuracy)
 print(paste("Out-of-sample error rate for Random Forest:", rf_cv_error_rate))
 
 #Random forest has had the best out of sample error rate! cool stuff 
+
+
+
+#Boosting 
+library(adabag)
+
+boosted_model <- boosting(Species ~ ., data = train_data, mfinal = 100)
+ada_train_predictions <- predict(boosted_model, train_data)$class
+
+#error rate for boosting model on training data
+table(ada_train_predictions, train_data$Species)
+ada_train_error_rate <- sum(ada_train_predictions != train_data$Species) / nrow(train_data)
+print(paste("Training Error Rate (Boosting):", ada_train_error_rate))
+
+#training error rate still 0
+
+#cv with caret as I've been doing, needed a different TuneGrid 
+tune_grid <- expand.grid(mfinal = 100,          #boosting iterations
+                         maxdepth = 30,         #depth of trees
+                         coeflearn = c("Breiman"))  #coefficient learning, not sure which to use, looked around online
+
+#cross-validation
+cv_boosting_model <- train(Species ~ ., 
+                           data = dataset, 
+                           method = "AdaBoost.M1", 
+                           trControl = cv_control, 
+                           tuneGrid = tune_grid)
+
+# Cross-validation results for boosting model
+print(cv_boosting_model)
+
+boosting_cv_error_rate <- 1 - max(cv_boosting_model$results$Accuracy)
+print(paste("Out-of-sample error rate for Boosting:", boosting_cv_error_rate))
+
+#Best out of sample error rate yet. Still marginal tho 
+
+
+#EXTREME Boosting 
+library(xgboost)
+
+#putting it in correct format. I looked at Dan's code for this, wasn't sure what it needed from the help doc
+
+
+#removing genus and family column as they aren't right for the matrix 
+train_data <- subset(train_data, select = -c(Family,Genus) )
+
+# Convert the data to a matrix and labels to integer class indices
+train_data$Species <- as.numeric(as.factor(train_data$Species))-1
+X_train <- as.matrix(train_data[, -which(names(train_data) == "Species")])
+y_train <- as.integer(as.factor(train_data$Species)) - 1  #as I understand this will convert factor levels to integers starting from 0
+
+# Set the number of classes based on the number of unique species
+num_class <- length(unique(train_data$Species))
+m_xgb <- xgboost(data = X_train,
+                 label = y_train,
+                 max_depth = 6,
+                 eta = 0.3,
+                 nrounds = 20,
+                 objective = "multi:softprob",  # Use multiclass objective, softmax gave me direct class labels which messed up some stuff below 
+                 num_class = num_class,        # Number of classes
+                 nthread = 2,
+                 verbose = 2)
+
+pred_prob <- predict(m_xgb, X_train)
+print(pred_prob)
+nrow_X_train <- nrow(X_train)
+#each row should represent one observation, and each column represents a class probability
+pred_matrix <- matrix(pred_prob, nrow = nrow_X_train, ncol = num_class, byrow = TRUE)
+pred_labels <- max.col(pred_matrix) - 1 
+
+xgb_train_error_rate <- sum(pred_labels != y_train) / length(y_train)
+print(paste("Training Error Rate (XGBoost Multiclass):", xgb_train_error_rate))
+#still 0
+
+
+#cv with caret as I've been doing
+
+tune_grid <- expand.grid(
+  nrounds = 20,          #boosting iterations
+  max_depth = 6,         #maximum depth of trees
+  eta = 0.3,             #learning rate
+  gamma = 0,             #min loss reduction
+  colsample_bytree = 1,  #subsample ratio of columns when constructing each tree
+  min_child_weight = 1,  #funny name. minimum sum of instance weight (hessian) needed in a child. no idea how this regularization works haha
+  subsample = 1          #subsample ratio of the training instances
+)
+#train the XGBoost model
+xgb_model <- train(
+  Species ~ ., 
+  data = train_data,
+  method = "xgbTree",
+  trControl = cv_control,
+  tuneGrid = tune_grid,
+)
+
+#CV error rate. The other way I had done it in the past didn't work
+print(names(xgb_model$results))
+
+#I think because Accuracy cannot be specified in the reggression models, this is not the same metric when used before, but I'll use RMSE 
+#RMSE
+XGB_cv_error_rate <- min(xgb_model$results$RMSE)
+
+print(paste("Cross-Validation Error Rate (XGBoost Multiclass):", XGB_cv_error_rate))
+
+#It did worse than my other models: 0.0024 error rate
+
+
+
+#TESTIN
+#The best model was the boosted model, not extreme boosted
+# Predict
+ada_test_predictions <- predict(boosted_model, test_data)$class
+
+# Confusion matrix comparing predicted vs actual species in test_data
+confusion_matrix <- table(ada_test_predictions, test_data$Species)
+print("Confusion Matrix for Test Data:")
+print(confusion_matrix)
+
+#error rate on the test data
+ada_test_error_rate <- sum(ada_test_predictions != test_data$Species) / nrow(test_data)
+print(paste("Test Error Rate (Boosting):", ada_test_error_rate))
+
+
+#0!
+
+
+#summary table
+model_names <- c("Full Decision Tree", 
+                 "Pruned Decision Tree", 
+                 "Bagging", 
+                 "Random Forest", 
+                 "Boosting",
+                 "XGBoost")
+cv_scores <- c(full_tree_error_rate,    
+               pruned_tree_error_rate,  
+               bagging_cv_error_rate,   
+               rf_cv_error_rate,        
+               boosting_cv_error_rate,  
+               XGB_cv_error_rate)       
+
+cv_score_table <- data.frame(Model = model_names, CV_Error_Rate = cv_scores)
+print(cv_score_table)
+
+library(gplots)
+png("cv_score_table.png", width = 800, height = 400)
+textplot(cv_score_table, halign = "center", valign = "top", cex = 1.2)
+title("Cross-Validation Error Rates")
+dev.off()
