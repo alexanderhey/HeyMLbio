@@ -1,3 +1,13 @@
+#DAN: The summary in "Results_summary.docx" is just about the minimum. 
+#Overall, you've done all the components. You went above and beyond by using caret 
+#when we had not (yet) learned that, and that's great. However, you semi-consistently made 
+#the sub-optimal choice to use the entire dataset, instead of the training portion
+#of the data whenever you used caret to get x-val scores. That means both that you 
+#did not follow the best practice of keeping testing data separate, and also it complicates
+#comparisons between x-val scores based on the training data and x-val scores based 
+#on the whole dataset. That's a non-trivial shortcoming - have a look again through
+#your own code to see what I mean. Nevertheless, S+ for going to the extra effort.  
+
 
 #loadin data 
 data <- read.csv("Frogs_MFCCs.csv")
@@ -50,6 +60,7 @@ print(paste("Training Error Rate:", train_error_rate))
 #graphical visualization
 # Load the rpart.plot library for visualizing the tree
 library(rpart.plot)
+#DAN: Nice job adding this, which was not covered.
 
 # Plot the tree
 rpart.plot(model_tree)
@@ -73,7 +84,7 @@ print(paste("Training Error Rate:", train_error_rate_full))
 rpart.plot(full_tree)
 
 #This rpart.plot package seems cool. much easier to read!
-
+#DAN: Agreed
 
 
 
@@ -92,7 +103,9 @@ numberK <- 7
 
 #shuffle the rows of the dataset
 shuffled_data <- dataset[sample(dim(dataset)[1], dim(dataset)[1], replace = FALSE),]
-
+#DAN: You here start over from the *whole* dataset, reshuffling it again for some 
+#reason, but not re-splitting it. This means you are not following the principle
+#of keeping the testing data in the vault. 
 
 #set up cross-validation control using the 'trainControl' function from the caret package
 cv_control <- trainControl(method = "cv", number = numberK)
@@ -105,6 +118,7 @@ kfold_tree_model <- train(Species ~ .,
                           data = shuffled_data, 
                           method = "rpart", 
                           trControl = cv_control)
+#DAN: You are here using the testing as well as the training data! That's a problem. 
 
 #results of cross val
 print(kfold_tree_model)
@@ -199,10 +213,13 @@ print(paste("Training Error Rate:", train_error_rate_full))
 
 #full_tree cv, added the cp parameters from before 
 cv_pruned_tree <- train(Species ~ ., 
-                      data = dataset, 
+                      data = dataset, #DAN: Again using the full for training. 
                       method = "rpart", 
                       trControl = cv_control, 
                       tuneGrid = data.frame(cp = 0.007))
+#DAN: The use of cvaret is cool - you went out of your way to learn that and implement it
+#before we leared it. But you need to do all the caret fitting on the training data that
+#you separated out at the begining instead of on the whole dataset. 
 
 print(cv_pruned_tree)
 #out-of-sample error rate for pruned_tree
@@ -221,6 +238,8 @@ set.seed(101)
 
 #ipredbagg doesn't like characters 
 train_data$Species <- as.factor(train_data$Species)
+#DAN: Now we have switched back to using only the training data. That's good, but it makes
+#it difficult to compare to the work above, which used the whole dataset. 
 
 bagging_model <- bagging(Species ~ ., data = train_data, nbagg = 500,
                          control = rpart.control(cp = 0, minsplit = 1))
@@ -368,6 +387,9 @@ xgb_model <- train(
   trControl = cv_control,
   tuneGrid = tune_grid,
 )
+#DAN: Now you are using the training data again, instead of the whole dataset. That's
+#good, but also inconsistent with some of your other model evaluations, complicating 
+#comparisons. 
 
 #CV error rate. The other way I had done it in the past didn't work
 print(names(xgb_model$results))
@@ -398,7 +420,7 @@ print(paste("Test Error Rate (Boosting):", ada_test_error_rate))
 
 
 #0!
-
+#
 
 #summary table
 model_names <- c("Full Decision Tree", 

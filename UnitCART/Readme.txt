@@ -1,3 +1,5 @@
+#DAN: Great idea to have a file like this, for record keeping and attribution
+
 Data Set Name: Anuran Calls (MFCCs)
 
 Abstract: (less than 200 characters).
