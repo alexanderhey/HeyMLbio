@@ -1,3 +1,11 @@
+#DAN: Nice work with the paragraphs explaining something about the two new methods.
+#This needs a header - I can't even tell what your ML problem is without a bit of reverse engineering.
+#You'll have another try at the image dataset when you start the NN unit. 
+#Nice work getting this done adequately from the wilds.
+#Since you have not had time to dig as much as you might have liked into this assignment, you might want 
+#to spend 20 minutes going through my code solution for the assignment when you return from Ecuador.
+#Grade: S
+
 
 library(imager)
 library(caret)
