@@ -1,3 +1,13 @@
+#DAN: There are some good example of modularity here, but your answer is not correct (as you
+#have observed - also see my code and results). Part of that is probably due to trying to do the filtering
+#and regression steps at once. See comments below. 
+#Grade: S
+
+#DAN: Put a header at the top 
+#DAN: The function should be defined in another script and then *used* in main. You did the reverse.
+#The results disagrees with what I got. Check my code. 
+
+
 library(ggplot2)
 library(dplyr)
 library(maps)
@@ -34,6 +44,11 @@ analyze_climate_data <- function(rds_file, variable_name) {
       ) %>%
       filter(!is.na(slope))  #filter out locations with no slope
   }
+  #DAN: The problem with the tidyverse is it is hard to test, because all steps are piled together with pipes. 
+  #You result disagrees with mine (and with climate science). My result agrees with other students. Hard to say
+  #because of use of tidyverse, what precisely the problem us without really delving into it. 
+  #DAN: One problem seems to be you are trying to filter the sites (to use only those with 40) and also get
+  #the slopes in one function. Would be better (clearer and less error prone) to break that up.
   
   #MODULARITY EXAMPLE 5: Avoid hardcoding "data"; pass column names as a variable.
   #Calculate slopes for the provided data
