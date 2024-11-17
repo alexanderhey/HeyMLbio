@@ -1,0 +1,16 @@
+\documentclass{article}
+\title{Supplementary Information for Toy Analysis Report}
+\author{Alex Hey}
+
+\begin{document}
+\maketitle
+
+\section{Equation for Error Rate}
+The error rate is calculated as follows:
+\begin{equation}
+    \text{Error Rate} = \frac{\sum_{i=1}^n I(\hat{y}_i \neq y_i)}{n}
+\end{equation}
+where \( \hat{y}_i \) is the predicted class, \( y_i \) is the actual class, and \( I \) is the indicator function.
+
+
+\end{document}

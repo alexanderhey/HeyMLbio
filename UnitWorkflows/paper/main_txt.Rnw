@@ -1,0 +1,53 @@
+\documentclass{article}
+\title{Decision Tree Modeling of Frog Species}
+\author{Alex Hey}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+In this toy analysis, we applied various machine learning models to classify frog species based on MFCC data. This report presents the results of decision tree models trained on a subset of the data and evaluates their performance.
+
+\section{Methods}
+\subsection{Data Preparation}
+The dataset, \texttt{Frogs\_MFCCs.csv}, was split into a training set and a test set with a 75-25 ratio. 
+
+\subsection{Model Training}
+We trained decision trees with and without pruning. A k-fold cross-validation was performed using the \texttt{caret} package to assess model performance.
+
+\section{Results}
+\subsection{Error Rates}
+The error rates for each model variant are summarized in Table~\ref{tab:results}. Based on these results, we observed that the unpruned tree performed slightly better than the pruned tree.
+
+<<results-table, echo=FALSE, results='asis'>>=
+#Found this online on how to embed a .csv from results
+library(xtable)
+
+results <- read.csv("../results/error_rates.csv")
+
+# Convert to LaTeX table
+print(xtable(results, caption = "Error rates for different model variants", label = "tab:results"), 
+      include.rownames = FALSE)
+@
+
+\subsection{Figures and Tables}
+Figure~\ref{fig:tree} shows the structure of the final decision tree model. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{../results/decision_tree.png}
+    \caption{Decision Tree structure used for classification of frog species.}
+    \label{fig:tree}
+\end{figure}
+
+\section{Supplementary Information}
+For additional details, refer to the Supplementary Information (SI) file~\cite{Reuman2024}. I made up a random citation just to get practice with it. 
+
+\section{Conclusion}
+I'm trying out new formats and sections here.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

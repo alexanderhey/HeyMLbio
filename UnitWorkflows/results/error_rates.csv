@@ -1,0 +1,6 @@
+"Method","ErrorRate"
+"Unpruned Tree (Train)",0.00407709414381023
+"Unpruned Tree (Test)",0.00667037242912729
+"Pruned Tree (Train)",0.00407709414381023
+"Pruned Tree (Test)",0.00667037242912729
+"Cross-Validated Tree",0.288522117114515
