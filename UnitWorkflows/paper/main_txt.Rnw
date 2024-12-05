@@ -4,6 +4,7 @@
 \date{\today}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \section{Introduction}
@@ -20,6 +21,7 @@ We trained decision trees with and without pruning. A k-fold cross-validation wa
 \subsection{Error Rates}
 The error rates for each model variant are summarized in Table~\ref{tab:results}. Based on these results, we observed that the unpruned tree performed slightly better than the pruned tree.
 
+%DAN: results="asis" did not work for me. I could not get this to compile. 
 <<results-table, echo=FALSE, results='asis'>>=
 #Found this online on how to embed a .csv from results
 library(xtable)
@@ -29,6 +31,9 @@ results <- read.csv("../results/error_rates.csv")
 # Convert to LaTeX table
 print(xtable(results, caption = "Error rates for different model variants", label = "tab:results"), 
       include.rownames = FALSE)
+#DAN: Ordinarily you want to do this in your R script. I argue the only thing you should do
+#in a chunk is import already-created results. Modular design says to separate the creation
+#and reporting of results. 
 @
 
 \subsection{Figures and Tables}
