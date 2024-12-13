@@ -9,7 +9,7 @@ img_height <- 256
 img_width <- 256
 
 load_and_preprocess_image <- function(img_path) {
-  img <- load.image(img_path)  #
+  img <- load.image(img_path)  #DAN: This is an imager function, so you need a library(imager)
   img <- resize(img, img_width, img_height)  #resize to dimensions. Not sure if I need this since kaggle said they were all 256 by 256
   img_array <- as.array(img)  #Convert to array
   img_array <- array(img_array, dim = c(img_height, img_width, 3))  #Add channel dimension for RGB
@@ -86,7 +86,9 @@ model_2 %>% compile(
   loss = 'categorical_crossentropy',
   metrics = c('accuracy')
 )
-
+#DAN: Maybe this model did poorly because you used sgd. Would have been nice to try all the models with
+#the same optimizer and then experiment with different optimizers on the same model, so the two methodological
+#explorations are not confounded. 
 
 #combining CNN with some dropout layers
 model_3 <- keras_model_sequential() %>%
@@ -113,6 +115,8 @@ history_1 <- model_1 %>% fit(
   batch_size = 32,
   validation_split = 0.2
 )
+#DAN: Pretty wild that this simple model does so well. However, the model may not be as simple
+#as it appears. It's got over 66M params because of the huge dense layers!
 
 history_2 <- model_2 %>% fit(
   x = x_train, y = y_train,
@@ -140,7 +144,7 @@ cat("Model 3 Test Accuracy:", test_eval_3$accuracy, "\n")
 #results directory definition
 results_dir <- file.path(getwd(), "..", "results")  # Ensure it's relative to the code directory
 if (!dir.exists(results_dir)) dir.create(results_dir)
-
+#DAN: Thanks for using relative addressing!
 
 plot_accuracy <- function(history, model_name) {
 
