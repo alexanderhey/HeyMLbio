@@ -135,7 +135,7 @@ Examples of correctly and misclassified images for all models are saved in the `
 ---
 
 ## Conclusion
-Model 3 demonstrated the best overall performance with a test accuracy of 98.29%, highlighting the effectiveness of dropout layers in reducing overfitting. The project showcases the potential for scalable image classification pipelines using neural networks and transfer learning.
+Model 3 demonstrated the best overall performance with a test accuracy of 98.29%, highlighting the effectiveness of dropout layers in reducing overfitting.
 
 ---
 
